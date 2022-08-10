@@ -1,0 +1,133 @@
+package com.sbs.starter.controller;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.sbs.starter.dto.Article;
+import com.sbs.starter.service.ArticleService;
+
+import groovy.util.logging.Slf4j;
+
+
+@Controller
+@Slf4j
+public class ArticleController {
+
+		@Autowired
+		ArticleService articleService;
+		
+		
+		@RequestMapping("/article/detail")
+		public String showDetail(Model model, long id) {
+			
+			Article article = articleService.getOne(id);
+			
+			articleService.hitUp(id);
+			
+			model.addAttribute("article",article);
+			
+			return "article/detail";
+		}
+		
+		@RequestMapping("/article/modify")
+		public String showModify(Model model, long id) {
+			
+			Article article = articleService.getOne(id);
+			
+			model.addAttribute("article",article);
+			
+			return "article/modify";
+		}
+		
+
+		@RequestMapping("/article/list")
+		public String showList(Model model) {
+			
+			List<Article> list = articleService.getList();
+			int totalCount = articleService.getTotalCount();
+			
+			model.addAttribute("list",list);
+			model.addAttribute("totalCount",totalCount);
+
+			return "article/list";
+		}
+		
+		@RequestMapping("/article/add")
+		public String showAdd() {
+
+			return "article/add";
+		}
+		
+		@RequestMapping("/article/doModify")
+		@ResponseBody
+		public String doModify(@RequestParam Map<String, Object> param, long id) {
+			
+			articleService.modify(param);
+			
+			
+			String msg =  id + "번 게시물이 수정되었습니다.";
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("alert('" +msg+"');");
+			sb.append("location.replace('./detail?id="+ id +"');");
+			
+			sb.insert(0,"<script>");
+			sb.append("</script>");
+			
+			return sb.toString();
+		}
+		
+		@RequestMapping("/article/doAdd")
+		@ResponseBody
+		public String doAdd(@RequestParam Map<String, Object> param) {
+			//ajax 없이 그냥 param으로 받기 쌉가능!! 
+				//System.out.println(param.get("title"));
+				//System.out.println(param.get("body"));
+			long newId = articleService.add(param);
+			
+			
+			String msg =  newId + "번 게시물이 추가되었습니다.";
+			StringBuilder sb = new StringBuilder();
+			
+			//오 이거 하니깐 팝업으로 뜨네 + 상세페이지로 이동
+			//신기하게 여기서 이걸 적어주니, 바로 id값이 컨트롤러 메소드로 전달 가능하네 ;; 
+			sb.append("alert('" +msg+"');");
+			sb.append("location.replace('./detail?id="+newId +"');");
+			
+			sb.insert(0,"<script>");
+			sb.append("</script>");
+			
+			return sb.toString();
+		}
+		
+		@RequestMapping("/article/doDelete")
+		@ResponseBody
+		public String doDelete(long id) {
+
+			articleService.delete(id);
+			
+			
+			String msg =  id + "번 게시물이 삭제되었습니다.";
+			StringBuilder sb = new StringBuilder();
+			
+			//오 이거 하니깐 팝업으로 뜨네 + 상세페이지로 이동
+			//신기하게 여기서 이걸 적어주니, 바로 id값이 컨트롤러 메소드로 전달 가능하네 ;; 
+			sb.append("alert('" +msg+"');");
+			sb.append("location.replace('./list');");
+			
+			sb.insert(0,"<script>");
+			sb.append("</script>");
+			
+			return sb.toString();
+		}
+		
+		
+		
+}
